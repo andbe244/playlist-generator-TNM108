@@ -12,8 +12,8 @@ file_path = 'tcc_ceds_music.csv'  # Replace with the actual path to your dataset
 music_data = pd.read_csv(file_path)
 
 # Display basic information about the dataset
-print(music_data.info())
-print(music_data.head())
+#print(music_data.info())
+#print(music_data.head())
 
 # Define a function to classify songs into moods (including "Angry")
 def classify_mood(row):
