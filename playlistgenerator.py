@@ -1,72 +1,133 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import messagebox
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import joblib
+from nltk.sentiment import SentimentIntensityAnalyzer
+import nltk
+import os
 
-# Load the dataset (replace this with the correct file path)
+# Step 1: Download VADER lexicon for sentiment analysis
+nltk.download('vader_lexicon')
+
+# Step 2: Load the dataset
 file_path = 'tcc_ceds_music.csv'  # Replace with your actual dataset file path
 music_data = pd.read_csv(file_path)
 
-# Define a function to classify songs into moods
-def classify_mood(row):
-    if row['valence'] < 0.3 and row['energy'] > 0.7:
-        return "Angry"
-    elif row['valence'] > 0.7 and row['energy'] > 0.6:
+print("Dataset loaded successfully!")
+print(music_data.head())  # Debug: Display dataset
+
+# Step 3: TF-IDF Vectorization for Song Metadata
+def vectorize_song_metadata():
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=100)
+    song_metadata = music_data['track_name'] + ' ' + music_data['artist_name']
+    X = vectorizer.fit_transform(song_metadata).toarray()
+    print("TF-IDF vectorization completed!")  # Debug
+    return vectorizer, X
+
+# Step 4: Train and Save Random Forest Model
+def train_and_save_random_forest(X, y):
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    # Train Random Forest Classifier
+    rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+    rf_model.fit(X_train, y_train)
+    print("Random Forest model trained!")  # Debug
+    
+    # Evaluate Model
+    y_pred = rf_model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Random Forest Accuracy: {accuracy * 100:.2f}%")  # Debug
+    
+    # Save Model and Vectorizer
+    joblib.dump(rf_model, 'random_forest_model.pkl')
+    joblib.dump(vectorizer, 'tfidf_vectorizer.pkl')
+    print("Model and vectorizer saved!")  # Debug
+
+# Check if model and vectorizer exist; if not, train and save
+if not os.path.exists('random_forest_model.pkl') or not os.path.exists('tfidf_vectorizer.pkl'):
+    vectorizer, X = vectorize_song_metadata()
+    train_and_save_random_forest(X, music_data['mood'])
+
+# Step 5: Load Trained Model and Vectorizer
+rf_model = joblib.load('random_forest_model.pkl')
+vectorizer = joblib.load('tfidf_vectorizer.pkl')
+print("Model and vectorizer loaded!")  # Debug
+
+# Step 6: Assign Predicted Moods to Songs
+def assign_song_moods():
+    song_metadata = music_data['track_name'] + ' ' + music_data['artist_name']
+    features = vectorizer.transform(song_metadata).toarray()
+    music_data['predicted_mood'] = rf_model.predict(features)
+    print("Moods assigned to songs!")  # Debug
+
+assign_song_moods()
+
+# Step 7: Detect User Mood Using Sentiment Analysis
+def detect_user_mood(user_input):
+    sia = SentimentIntensityAnalyzer()
+    sentiment = sia.polarity_scores(user_input)
+    print(f"Sentiment scores: {sentiment}")  # Debug
+    if sentiment['compound'] >= 0.5:
         return "Happy"
-    elif row['valence'] < 0.4 and row['energy'] < 0.5:
+    elif sentiment['compound'] <= -0.5:
+        return "Angry"
+    elif sentiment['compound'] > -0.5 and sentiment['compound'] < 0:
         return "Sad"
-    elif row['danceability'] > 0.7 and row['energy'] > 0.5:
-        return "Energetic"
     else:
         return "Calm"
 
-# Apply the mood classification to the dataset
-music_data['mood'] = music_data.apply(classify_mood, axis=1)
-
-# Function to generate a playlist based on the mood
+# Step 8: Generate Playlist Based on Mood
 def generate_playlist(mood, num_songs=10):
-    # Filter songs matching the desired mood
-    filtered_songs = music_data[music_data['mood'] == mood]
+    print(f"Generating playlist for mood: {mood}")  # Debug
+    filtered_songs = music_data[music_data['predicted_mood'] == mood]
     if len(filtered_songs) < num_songs:
         num_songs = len(filtered_songs)
-    
     return filtered_songs[['track_name', 'artist_name']].sample(num_songs)
 
-# Function to update the UI with the playlist
-def display_playlist(mood):
-    # Generate playlist for the selected mood
-    playlist = generate_playlist(mood, num_songs=10)
-
-    # Clear previous results
+# Step 9: Display Playlist in GUI
+def display_playlist():
+    user_input = mood_entry.get("1.0", tk.END).strip()
+    if not user_input:
+        messagebox.showerror("Error", "Please enter a mood description!")
+        return
+    
+    # Detect Mood from User Input
+    user_mood = detect_user_mood(user_input)
+    print(f"Detected mood: {user_mood}")  # Debug
+    
+    # Generate Playlist
+    playlist = generate_playlist(user_mood, num_songs=10)
+    
+    # Display Playlist in Text Widget
     playlist_text.delete(1.0, tk.END)
-
-    # Display the playlist in the text widget
-    playlist_text.insert(tk.END, f"Playlist for mood: {mood}\n")
+    playlist_text.insert(tk.END, f"Playlist for mood: {user_mood}\n")
     for _, song in playlist.iterrows():
         playlist_text.insert(tk.END, f"- {song['track_name']} by {song['artist_name']}\n")
 
-# Create the main window
+# Step 10: Create GUI
 window = tk.Tk()
 window.title("Mood-based Playlist Generator")
 
-# Set window size
-window.geometry("400x400")
+# Set Window Size
+window.geometry("400x500")
 
-# Create mood buttons
-button_happy = tk.Button(window, text="Happy", width=20, command=lambda: display_playlist("Happy"))
-button_happy.pack(pady=10)
+# GUI Elements
+label = tk.Label(window, text="Describe your mood:")
+label.pack(pady=10)
 
-button_angry = tk.Button(window, text="Angry", width=20, command=lambda: display_playlist("Angry"))
-button_angry.pack(pady=10)
+mood_entry = tk.Text(window, height=5, width=40)
+mood_entry.pack(pady=10)
 
-button_sad = tk.Button(window, text="Sad", width=20, command=lambda: display_playlist("Sad"))
-button_sad.pack(pady=10)
+generate_button = tk.Button(window, text="Generate Playlist", command=display_playlist)
+generate_button.pack(pady=10)
 
-button_calm = tk.Button(window, text="Calm", width=20, command=lambda: display_playlist("Calm"))
-button_calm.pack(pady=10)
-
-# Create a text widget to display the playlist
-playlist_text = tk.Text(window, height=10, width=40)
+playlist_text = tk.Text(window, height=15, width=40)
 playlist_text.pack(pady=20)
 
-# Run the application
+# Run the Application
 window.mainloop()
