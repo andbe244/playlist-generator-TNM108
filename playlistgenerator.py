@@ -159,7 +159,30 @@ label.pack(pady=10)
 mood_entry = tk.Text(window, height=5, width=50)
 mood_entry.pack(pady=10)
 
-generate_button = tk.Button(window, text="Generate Playlist", command=display_playlist)
+# Customize Button to Match the Style in the Image
+def style_button(button):
+    button.configure(
+        bg="#1DB954",  # Green background color
+        fg="white",  # White text color
+        font=("Arial", 12, "bold"),  # Bold font
+        relief="flat",  # Flat relief for a modern look
+        activebackground="#1ED760",  # Slightly lighter green when pressed
+        activeforeground="white",  # White text when active
+        borderwidth=0,  # Remove button border
+        height=2,  # Button height
+        width=20  # Button width
+    )
+    button.bind("<Enter>", lambda e: button.configure(bg="#1AAE48"))  # Darker green on hover
+    button.bind("<Leave>", lambda e: button.configure(bg="#1DB954"))  # Default green on leave
+
+# Create Generate Playlist Button with Rounded Edges
+def rounded_button(master, **kwargs):
+    button = tk.Button(master, **kwargs)
+    style_button(button)
+    button.config(highlightthickness=0, padx=10, pady=5, borderwidth=0)
+    return button
+
+generate_button = rounded_button(window, text="SHUFFLE PLAY", command=display_playlist)
 generate_button.pack(pady=10)
 
 playlist_text = tk.Text(window, height=20, width=50)
