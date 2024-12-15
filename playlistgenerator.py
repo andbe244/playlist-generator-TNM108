@@ -1,137 +1,27 @@
-# import pandas as pd
-# import tkinter as tk
-# from tkinter import ttk
-
-# # Load the dataset (replace this with the correct file path)
-# file_path = 'tcc_ceds_music.csv'  # Replace with your actual dataset file path
-# music_data = pd.read_csv(file_path)
-
-# # Define a function to classify songs into moods
-# def classify_mood(row):
-#     if row['valence'] < 0.3 and row['energy'] > 0.7:
-#         return "Angry"
-#     elif row['valence'] > 0.7 and row['energy'] > 0.6:
-#         return "Happy"
-#     elif row['valence'] < 0.4 and row['energy'] < 0.5:
-#         return "Sad"
-#     elif row['danceability'] > 0.7 and row['energy'] > 0.5:
-#         return "Energetic"
-#     else:
-#         return "Calm"
-
-# # Apply the mood classification to the dataset
-# music_data['mood'] = music_data.apply(classify_mood, axis=1)
-
-# # Function to generate a playlist based on the mood
-# def generate_playlist(mood, num_songs=10):
-#     # Filter songs matching the desired mood
-#     filtered_songs = music_data[music_data['mood'] == mood]
-#     if len(filtered_songs) < num_songs:
-#         num_songs = len(filtered_songs)  # Use all songs if less than 'num_songs'
-    
-#     # Return the songs, no random sample, so all of them show up
-#     return filtered_songs[['track_name', 'artist_name']].head(num_songs)  # Use .head to limit if fewer than num_songs
-
-# # Function to update the UI with the playlist
-# def display_playlist(mood):
-#     # Generate playlist for the selected mood
-#     playlist = generate_playlist(mood, num_songs=10)
-
-#     # Clear previous results in playlist_frame
-#     for widget in playlist_frame.winfo_children():
-#         widget.destroy()
-
-#     # Add title above playlist display
-#     title_label.config(text=f"Playlist for mood: {mood}")
-
-#     # Display the playlist in a more styled format (Spotify-like)
-#     for _, song in playlist.iterrows():
-#         # Create label for the song title with a larger font size
-#         title_label = ttk.Label(playlist_frame,
-#                                text=song['track_name'],
-#                                font=("Helvetica", 18, "bold"),  # Larger font for title
-#                                anchor="w",  # Align left
-#                                background="#282828",  # Dark background for the songs
-#                                foreground="white",
-#                                padding=(10, 5))
-#         title_label.pack(fill="x", pady=(5, 0))  # Padding between songs
-
-#         # Create label for the artist name with a smaller font size
-#         artist_label = ttk.Label(playlist_frame,
-#                                  text=song['artist_name'],
-#                                  font=("Helvetica", 14),  # Smaller font for artist
-#                                  anchor="w",  # Align left
-#                                  background="#282828",  # Dark background for the songs
-#                                  foreground="white",
-#                                  padding=(10, 5))
-#         artist_label.pack(fill="x", pady=(0, 10))  # Padding between song and next artist
-
-# # Create the main window
-# window = tk.Tk()
-# window.title("Mood-based Playlist Generator")
-
-# # Set window size and background color
-# window.geometry("800x600")  # Set a fixed size
-# window.configure(bg="black")  # Set the background color of the entire window
-
-# # Create a Style object for ttk widgets
-# style = ttk.Style()
-
-# # Configure custom styles for buttons
-# style.configure("TButton",
-#                 font=("Helvetica", 16, "bold"),
-#                 foreground="white",
-#                 background="#1DB954",  # Spotify green color
-#                 width=12,  # Set width to fit the button size better
-#                 height=2,
-#                 padding=(20, 10),  # Increase padding for larger buttons
-#                 relief="solid",  # Button border style
-#                 borderwidth=2,  # Border width to give more visibility to button edges
-#                 cursor='hand1',
-#                 highlightthickness=0)  # Remove highlight border
-
-# # Create mood buttons using ttk.Button with consistent packing
-# button_frame = tk.Frame(window, bg="black")  # Create a frame to hold buttons
-# button_frame.pack(pady=10, fill="x")
-
-# # Create mood buttons using ttk.Button and pack them
-# button_happy = ttk.Button(button_frame, text="Happy", style="TButton", command=lambda: display_playlist("Happy"))
-# button_happy.pack(side="left", padx=5, expand=True)
-
-# button_angry = ttk.Button(button_frame, text="Angry", style="TButton", command=lambda: display_playlist("Angry"))
-# button_angry.pack(side="left", padx=5, expand=True)
-
-# button_sad = ttk.Button(button_frame, text="Sad", style="TButton", command=lambda: display_playlist("Sad"))
-# button_sad.pack(side="left", padx=5, expand=True)
-
-# button_calm = ttk.Button(button_frame, text="Calm", style="TButton", command=lambda: display_playlist("Calm"))
-# button_calm.pack(side="left", padx=5, expand=True)
-
-# # Create a label for the title above the playlist (large white title)
-# title_label = ttk.Label(window,
-#                         background="black",  # Dark background for the title
-#                         text="",  # Initial placeholder text
-#                         font=("Helvetica", 24, "bold"),
-#                         foreground="white",  # White text color
-#                         padding=5)
-# title_label.pack(fill="x", pady=20)  # Title above the playlist, with padding
-
-# # Create a frame to hold the playlist items (this ensures better organization)
-# playlist_frame = tk.Frame(window, bg="black", padx=20, pady=20)  # Set background to black
-# playlist_frame.pack(pady=20, fill="both", expand=True)
-
-# # Run the application
-# window.mainloop()
-
 import pandas as pd
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+import joblib
+from nltk.sentiment import SentimentIntensityAnalyzer
+import nltk
+import os
 
-# Load the dataset (replace this with the correct file path)
+# Step 1: Download VADER lexicon for sentiment analysis
+nltk.download('vader_lexicon')
+
+# Step 2: Load the dataset
 file_path = 'tcc_ceds_music.csv'  # Replace with your actual dataset file path
 music_data = pd.read_csv(file_path)
 
-# Define a function to classify songs into moods
+print("Dataset loaded successfully!")
+print(music_data.head())  # Debug: Display dataset
+
+# Step 3: Define a function to classify songs into moods (including "Angry," "Sad," "Energetic," "Calm")
 def classify_mood(row):
     if row['valence'] < 0.3 and row['energy'] > 0.7:
         return "Angry"
@@ -144,107 +34,159 @@ def classify_mood(row):
     else:
         return "Calm"
 
-# Apply the mood classification to the dataset
+# Step 4: Apply the updated mood classification
 music_data['mood'] = music_data.apply(classify_mood, axis=1)
 
-# Function to generate a playlist based on the mood
-def generate_playlist(mood, num_songs=10):
-    # Filter songs matching the desired mood
-    filtered_songs = music_data[music_data['mood'] == mood]
-    if len(filtered_songs) < num_songs:
-        num_songs = len(filtered_songs)  # Use all songs if fewer than 'num_songs'
+# Display the updated mood distribution
+print("\nMood Distribution:")
+print(music_data['mood'].value_counts())
+
+# Step 5: Prepare Features (Lyrics + Audio Features)
+def prepare_features():
+    # Combine lyrics for TF-IDF
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=100)
+    text_features = vectorizer.fit_transform(music_data['lyrics']).toarray()
+
+    # Scale audio features (valence, energy, danceability, etc.)
+    numerical_features = ['valence', 'energy', 'danceability', 'acousticness', 'instrumentalness']
+    scaler = StandardScaler()
+    scaled_numerical_features = scaler.fit_transform(music_data[numerical_features])
+
+    # Combine TF-IDF text features with scaled numerical features
+    X = pd.concat([pd.DataFrame(text_features), pd.DataFrame(scaled_numerical_features)], axis=1).values
+    print("Features prepared!")  # Debug
+    return vectorizer, scaler, X
+
+# Step 6: Train and Save Random Forest Model
+def train_and_save_random_forest(X, y):
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # Return the songs, no random sample, so all of them show up
-    return filtered_songs[['track_name', 'artist_name']].head(num_songs)  # Use .head to limit if fewer than num_songs
+    # Train Random Forest Classifier
+    rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+    rf_model.fit(X_train, y_train)
+    print("Random Forest model trained!")  # Debug
+    
+    # Evaluate Model
+    y_pred = rf_model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Random Forest Accuracy: {accuracy * 100:.2f}%")  # Debug
+    
+    # Save Model, Vectorizer, and Scaler
+    joblib.dump(rf_model, 'random_forest_model.pkl')
+    joblib.dump(vectorizer, 'tfidf_vectorizer.pkl')
+    joblib.dump(scaler, 'feature_scaler.pkl')
+    print("Model, vectorizer, and scaler saved!")  # Debug
 
-# Function to update the UI with the playlist
-def display_playlist(mood):
-    # Generate playlist for the selected mood
-    playlist = generate_playlist(mood, num_songs=10)
+# Check if model, vectorizer, and scaler exist; if not, train and save
+if not os.path.exists('random_forest_model.pkl') or not os.path.exists('tfidf_vectorizer.pkl') or not os.path.exists('feature_scaler.pkl'):
+    vectorizer, scaler, X = prepare_features()
+    train_and_save_random_forest(X, music_data['mood'])
 
-    # Clear previous results in playlist_frame
-    for widget in playlist_frame.winfo_children():
-        widget.destroy()
+# Step 7: Load Trained Model, Vectorizer, and Scaler
+rf_model = joblib.load('random_forest_model.pkl')
+vectorizer = joblib.load('tfidf_vectorizer.pkl')
+scaler = joblib.load('feature_scaler.pkl')
+print("Model, vectorizer, and scaler loaded!")  # Debug
 
-    # Add title above playlist display (use global title_label)
-    title_label.config(text=f"Playlist for mood: {mood}")
+# Step 8: Assign Predicted Moods to Songs
+def assign_song_moods():
+    # Transform features using the loaded vectorizer and scaler
+    text_features = vectorizer.transform(music_data['lyrics']).toarray()
+    numerical_features = ['valence', 'energy', 'danceability', 'acousticness', 'instrumentalness']
+    scaled_numerical_features = scaler.transform(music_data[numerical_features])
 
-    # Display the playlist in a more styled format (Spotify-like)
+    # Combine text and numerical features
+    combined_features = pd.concat([pd.DataFrame(text_features), pd.DataFrame(scaled_numerical_features)], axis=1).values
+    music_data['predicted_mood'] = rf_model.predict(combined_features)
+    print("Moods assigned to songs!")  # Debug
+
+assign_song_moods()
+
+# Step 9: Detect User Mood Using Sentiment Analysis
+def detect_user_mood(user_input):
+    sia = SentimentIntensityAnalyzer()
+    sentiment = sia.polarity_scores(user_input)
+    print(f"Sentiment scores: {sentiment}")  # Debug
+    if sentiment['compound'] >= 0.5:
+        return "Happy"
+    elif sentiment['compound'] <= -0.5:
+        return "Angry"
+    elif sentiment['compound'] > -0.5 and sentiment['compound'] < 0:
+        return "Sad"
+    else:
+        return "Calm"
+
+# Step 10: Generate Playlist Based on Mood
+def generate_playlist(mood, num_songs=10):
+    print(f"Generating playlist for mood: {mood}")  # Debug
+    filtered_songs = music_data[music_data['predicted_mood'] == mood]
+    if len(filtered_songs) < num_songs:
+        num_songs = len(filtered_songs)
+    return filtered_songs[['track_name', 'artist_name']].sample(num_songs)
+
+# Step 11: Display Playlist in GUI
+def display_playlist():
+    user_input = mood_entry.get("1.0", tk.END).strip()
+    if not user_input:
+        messagebox.showerror("Error", "Please enter a mood description!")
+        return
+    
+    # Detect Mood from User Input
+    user_mood = detect_user_mood(user_input)
+    print(f"Detected mood: {user_mood}")  # Debug
+    
+    # Generate Playlist
+    playlist = generate_playlist(user_mood, num_songs=10)
+    
+    # Display Playlist in Text Widget
+    playlist_text.delete(1.0, tk.END)
+    playlist_text.insert(tk.END, f"Playlist for mood: {user_mood}\n")
     for _, song in playlist.iterrows():
-        # Create label for the song title with a larger font size
-        song_title_label = ttk.Label(playlist_frame,
-                                     text=song['track_name'],
-                                     font=("Helvetica", 16),  # Larger font for title
-                                     anchor="w",  # Align left
-                                     background="#282828",  # Dark background for the songs
-                                     foreground="white",
-                                     padding=(1, 1))
-        song_title_label.pack(fill="x", pady=(1, 0))  # Padding between songs
+        playlist_text.insert(tk.END, f"- {song['track_name']} by {song['artist_name']}\n")
 
-        # Create label for the artist name with a smaller font size
-        artist_label = ttk.Label(playlist_frame,
-                                 text=song['artist_name'],
-                                 font=("Helvetica", 12),  # Smaller font for artist
-                                 anchor="w",  # Align left
-                                 background="#101010",  # Dark background for the songs
-                                 foreground="grey",
-                                 padding=(1, 1))
-        artist_label.pack(fill="x", pady=(0, 1))  # Padding between song and next artist
-
-# Create the main window
+# Step 12: Create GUI
 window = tk.Tk()
 window.title("Mood-based Playlist Generator")
 
-# Set window size and background color
-window.geometry("800x600")  # Set a fixed size
-window.configure(bg="black")  # Set the background color of the entire window
+# Set Window Size
+window.geometry("500x600")
 
-# Create a Style object for ttk widgets
-style = ttk.Style()
+# GUI Elements
+label = tk.Label(window, text="Describe your mood:")
+label.pack(pady=10)
 
-# Configure custom styles for buttons (Spotify-like)
-style.configure("TButton",
-                font=("Helvetica", 16, "bold"),
-                foreground="white",
-                background="#1DB954",  # Spotify green color
-                width=12,  # Set width to fit the button size better
-                height=3,  # Make buttons larger
-                padding=(20, 10),  # Increase padding for larger buttons
-                relief="flat",  # Make button edges flat for a modern look
-                borderwidth=1,  # Border width to give more visibility to button edges
-                cursor='hand1',
-                highlightthickness=0,  # Remove highlight border
-                anchor="center")
+mood_entry = tk.Text(window, height=5, width=50)
+mood_entry.pack(pady=10)
 
-# Create mood buttons using ttk.Button with consistent packing
-button_frame = tk.Frame(window, bg="black")  # Create a frame to hold buttons
-button_frame.pack(pady=10, fill="x")
+# Customize Button to Match the Style in the Image
+def style_button(button):
+    button.configure(
+        bg="#1DB954",  # Green background color
+        fg="white",  # White text color
+        font=("Arial", 12, "bold"),  # Bold font
+        relief="flat",  # Flat relief for a modern look
+        activebackground="#1ED760",  # Slightly lighter green when pressed
+        activeforeground="white",  # White text when active
+        borderwidth=0,  # Remove button border
+        height=2,  # Button height
+        width=20  # Button width
+    )
+    button.bind("<Enter>", lambda e: button.configure(bg="#1AAE48"))  # Darker green on hover
+    button.bind("<Leave>", lambda e: button.configure(bg="#1DB954"))  # Default green on leave
 
-# Create mood buttons using ttk.Button and pack them
-button_happy = ttk.Button(button_frame, text="Happy", style="TButton", command=lambda: display_playlist("Happy"))
-button_happy.pack(side="left", padx=10, expand=True)
+# Create Generate Playlist Button with Rounded Edges
+def rounded_button(master, **kwargs):
+    button = tk.Button(master, **kwargs)
+    style_button(button)
+    button.config(highlightthickness=0, padx=10, pady=5, borderwidth=0)
+    return button
 
-button_angry = ttk.Button(button_frame, text="Angry", style="TButton", command=lambda: display_playlist("Angry"))
-button_angry.pack(side="left", padx=10, expand=True)
+generate_button = rounded_button(window, text="SHUFFLE PLAY", command=display_playlist)
+generate_button.pack(pady=10)
 
-button_sad = ttk.Button(button_frame, text="Sad", style="TButton", command=lambda: display_playlist("Sad"))
-button_sad.pack(side="left", padx=10, expand=True)
+playlist_text = tk.Text(window, height=20, width=50)
+playlist_text.pack(pady=20)
 
-button_calm = ttk.Button(button_frame, text="Calm", style="TButton", command=lambda: display_playlist("Calm"))
-button_calm.pack(side="left", padx=10, expand=True)
-
-# Create a label for the title above the playlist (large white title)
-title_label = ttk.Label(window,
-                        background="black",  # Dark background for the title
-                        text="",  # Initial placeholder text
-                        font=("Helvetica", 24, "bold"),
-                        foreground="white",  # White text color
-                        padding=5)
-title_label.pack(fill="x", pady=20)  # Title above the playlist, with padding
-
-# Create a frame to hold the playlist items (this ensures better organization)
-playlist_frame = tk.Frame(window, bg="black", padx=20, pady=20)  # Set background to black
-playlist_frame.pack(pady=20, fill="both", expand=True)
-
-# Run the application
+# Run the Application
 window.mainloop()
