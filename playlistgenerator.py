@@ -182,7 +182,7 @@ def rounded_button(master, **kwargs):
     button.config(highlightthickness=0, padx=10, pady=5, borderwidth=0)
     return button
 
-generate_button = rounded_button(window, text="SHUFFLE PLAY", command=display_playlist)
+generate_button = rounded_button(window, text="Generate Playlist", command=display_playlist)
 generate_button.pack(pady=10)
 
 playlist_text = tk.Text(window, height=20, width=50)
