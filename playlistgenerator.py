@@ -4,8 +4,10 @@ from tkinter import messagebox
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+import matplotlib.pyplot as plt
 import joblib
 from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
@@ -57,7 +59,7 @@ def prepare_features():
     print("Features prepared!")  # Debug
     return vectorizer, scaler, X
 
-# Step 6: Train and Save Random Forest Model
+# Step 6: Train and Save Random Forest Model (Updated with Confusion Matrix)
 def train_and_save_random_forest(X, y):
     # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -71,6 +73,23 @@ def train_and_save_random_forest(X, y):
     y_pred = rf_model.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     print(f"Random Forest Accuracy: {accuracy * 100:.2f}%")  # Debug
+    
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred, labels=rf_model.classes_)
+    print("\nConfusion Matrix:")
+    print(cm)
+    
+    # Visualize Confusion Matrix
+    plt.figure(figsize=(10, 7))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=rf_model.classes_, yticklabels=rf_model.classes_)
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.show()
+    
+    # Classification Report
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_pred))
     
     # Save Model, Vectorizer, and Scaler
     joblib.dump(rf_model, 'random_forest_model.pkl')
@@ -140,7 +159,7 @@ def display_playlist():
     playlist = generate_playlist(user_mood, num_songs=10)
     
     # Display Playlist in Text Widget
-    playlist_text.delete(1.0, tk.END)
+    playlist_text.delete("1.0", tk.END)
     playlist_text.insert(tk.END, f"Playlist for mood: {user_mood}\n")
     for _, song in playlist.iterrows():
         playlist_text.insert(tk.END, f"- {song['track_name']} by {song['artist_name']}\n")
@@ -162,12 +181,11 @@ mood_entry.pack(pady=10)
 # Customize Button to Match the Style in the Image
 def style_button(button):
     button.configure(
-        bg="#1DB954",  # Green background color
+        #bg="#00b76c",  # Green background color
         fg="white",  # White text color
-        font=("Arial", 12, "bold"),  # Bold font
+        font=("Lexend Deca", 15, "bold"),  # Bold font
         relief="flat",  # Flat relief for a modern look
-        activebackground="#1ED760",  # Slightly lighter green when pressed
-        activeforeground="white",  # White text when active
+        activebackground="#00b76c",  # Slightly lighter green when pressed
         borderwidth=0,  # Remove button border
         height=2,  # Button height
         width=20  # Button width
