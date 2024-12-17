@@ -172,7 +172,7 @@ window.title("Mood-based Playlist Generator")
 window.geometry("500x600")
 
 # GUI Elements
-label = tk.Label(window, text="Describe your mood:")
+label = tk.Label(window, text="Describe your mood:", font=("Lexend Deca", 14, "bold"))
 label.pack(pady=10)
 
 mood_entry = tk.Text(window, height=5, width=50)
