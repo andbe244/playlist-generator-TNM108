@@ -181,11 +181,10 @@ mood_entry.pack(pady=10)
 # Customize Button to Match the Style in the Image
 def style_button(button):
     button.configure(
-        #bg="#00b76c",  # Green background color
+
         fg="white",  # White text color
-        font=("Lexend Deca", 15, "bold"),  # Bold font
+        font=("Lexend Deca", 13, "bold"),  # Bold font
         relief="flat",  # Flat relief for a modern look
-        activebackground="#00b76c",  # Slightly lighter green when pressed
         borderwidth=0,  # Remove button border
         height=2,  # Button height
         width=20  # Button width
