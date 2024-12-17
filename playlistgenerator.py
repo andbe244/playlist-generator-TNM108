@@ -171,12 +171,42 @@ window.title("Mood-based Playlist Generator")
 # Set Window Size
 window.geometry("500x600")
 
+from tkinter import PhotoImage
+
+from PIL import Image, ImageTk
+
+# Load and Resize the Image
+image_path = "playlisttext.png"  # Replace with the correct path to your image
+try:
+    # Open the image
+    image = Image.open(image_path)
+    # Resize the image (set width and height)
+    resized_image = image.resize((350, 45))  # Set desired width=300 and height=100
+    # Convert to a PhotoImage
+    tk_image = ImageTk.PhotoImage(resized_image)
+except Exception as e:
+    print(f"Error loading image: {e}")
+    tk_image = None  # Fallback if the image fails to load
+
+# Display the resized image in the Label
+if tk_image:
+    label = tk.Label(window, image=tk_image)
+    label.image = tk_image  # Keep a reference to avoid garbage collection
+    label.pack(pady=10)
+else:
+    # Fallback text if the image doesn't load
+    label = tk.Label(window, text="Describe your mood:", font=("Lexend Deca", 14, "bold"))
+    label.pack(pady=10)
+
+    
 # GUI Elements
-label = tk.Label(window, text="Describe your mood:", font=("Lexend Deca", 14, "bold"))
-label.pack(pady=10)
+#label = tk.Label(window, text="Describe your mood:", font=("Lexend Deca", 14, "bold"))
+#label.pack(pady=10)
 
 mood_entry = tk.Text(window, height=5, width=50)
 mood_entry.pack(pady=10)
+
+
 
 # Customize Button to Match the Style in the Image
 def style_button(button):
